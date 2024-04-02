@@ -7,8 +7,8 @@ I used a regression discontinuity design to compare degrees north and south of H
 
 Output of the regression design indicated that the placment of the policy on the Huai River had a significant impact on air quality in the Northern region as compared to the Southern region. Additionally, a manipulation check demonstrated large enough confidence intervals to assume that manipulation across the Huai River was minimal. 
 
-A few different versions of the regression discontinuity design were estimated, namely by changing the bandwidth symmetry, kernel shape, and bandwidth size. These estimates provided greater insight into the impact of the policy.
+I estimated a few different versions of the regression discontinuity design, namely by changing the bandwidth symmetry, kernel shape, and bandwidth size. These estimates provided greater insight into the impact of the policy.
 
-Finally, a placebo test was conducted to ensure that the location of the Huai River on the design was not coincidental, and a result from the outcome of the policy.
+Finally, I conducted a placebo test to ensure that the location of the Huai River on the design was not coincidental, and a result from the outcome of the policy.
 
 If you have any questions, thoughts, or concerns about my code or methodology, drop me a line and I am happy to chat!
