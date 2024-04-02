@@ -1,0 +1,339 @@
+---
+title: "huai_project"
+output: pdf_document
+date: "2024-04-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+#loading packages
+library(pacman)
+p_load(dplyr, tidyverse, haven, rdrobust, ggplot2, magrittr, rddtools, broom, rddensity)
+
+#loading data 
+huai_data = read_dta('huairiver.dta')
+huai_data <- huai_data %>%
+  mutate(dist_bin = cut(dist_huai, breaks=quantile(dist_huai, probs = seq(0, 1, by = .05), na.rm =
+                                                     TRUE)))
+```
+
+A normal comparison of the air pollution in northern cities compared to southern cities would not adequately capture the causal effect of the Huai River policy due to the range of values being too large to indicate a significant difference in means. Ebenstein et all overcomes this barrier by a regression discontinuity design, directly comparing effects of air pollution on those immediately north and south of the Huai River. This comparison provides greater similarity between differing groups, and though we still incur a fundamental problem of economics by being unable to observe different outcomes on a single individual, regression discontinuity attempts to solve this problem by observing two individuals whose differences are negligible except being given treatment. In the study, the outcome variable is particulate matter, and the assignment variable is degrees north or south of the Huai River. 
+
+The identification assumption for regression discontinuity design is that change in Di is the only reason for discrete jumps in Yi around c. The first graphs are consistent with that assumption given that other observed factors did not jump discreetly around the latitude of the Huai River. 
+
+Accordingly, our regressions for each other observed characteristic reflect this characteristic by not being statistically significant around the Huai River. This is also indicated by the confidence interval for each regression including 0, which in effect, means our results are not statistically significant from 0. 
+
+```{r, echo=FALSE}
+#creating binned scatterplot
+regression_left <- lm(pm10 ~ dist_huai, data = subset(huai_data, dist_huai < 0))
+regression_right <- lm(pm10 ~ dist_huai, data = subset(huai_data, dist_huai >= 0))
+
+#binned scatterplot PM10
+bin_plot1 = huai_data %>%
+  group_by(dist_bin) %>%
+  summarise(dist_huai = mean(dist_huai), pm10 = mean(pm10)) %>%
+  ggplot(aes(x = dist_huai, y = pm10)) +
+  geom_point(aes(color = ifelse(dist_huai >= 0, "North", "South")), size = 2, alpha = 1) +
+  scale_color_manual(values = c("North" = "orange", "South" = "blue")) +
+  geom_smooth(data = filter(huai_data, dist_huai <= 0), method = "lm", formula = y ~ poly(x), se = TRUE, color = "black") +
+  geom_smooth(data = filter(huai_data, dist_huai >= 0), method = "lm", formula = y ~ poly(x), se = TRUE, color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "purple") +
+  labs(
+    title = "PM10 as a Function of Degree North of the Huai River",
+    color = "",
+    x = "Degrees North of the Huai River",
+    y = "PM10 Levels (ug/m3)"
+  )
+bin_plot1
+
+#binned scatterplot for temperature
+bin_plot2 = huai_data %>%
+  group_by(dist_bin) %>%
+  summarise(dist_huai = mean(dist_huai), temp = mean(temp)) %>%
+  ggplot(aes(x = dist_huai, y = temp)) +
+  geom_point(aes(color = ifelse(dist_huai >= 0, "North", "South")), size = 2, alpha = 1) +
+  scale_color_manual(values = c("North" = "orange", "South" = "blue")) +
+  geom_smooth(data = filter(huai_data, dist_huai <= 0), method = "lm", formula = y ~ poly(x), se = TRUE, color = "black") +
+  geom_smooth(data = filter(huai_data, dist_huai >= 0), method = "lm", formula = y ~ poly(x), se = TRUE, color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "purple") +
+  labs(
+    title = "Temperature as a Function of Degree North of the Huai River",
+    color = "",
+    x = "Degrees North of the Huai River",
+    y = "Temperature"
+  )
+bin_plot2
+
+#binned scatterplot for weather
+bin_plot3 = huai_data %>%
+  group_by(dist_bin) %>%
+  summarise(dist_huai = mean(dist_huai), prcp = mean(prcp)) %>%
+  ggplot(aes(x = dist_huai, y = prcp)) +
+  geom_point(aes(color = ifelse(dist_huai >= 0, "North", "South")), size = 2, alpha = 1) +
+  scale_color_manual(values = c("North" = "orange", "South" = "blue")) +
+  geom_smooth(data = filter(huai_data, dist_huai <= 0), method = "lm", formula = y ~ poly(x), se = TRUE, color = "black") +
+  geom_smooth(data = filter(huai_data, dist_huai >= 0), method = "lm", formula = y ~ poly(x), se = TRUE, color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "purple") +
+  labs(
+    title = "Precipitation as a Function of Degree North of the Huai River",
+    color = "",
+    x = "Degrees North of the Huai River",
+    y = "Precipitation"
+  )
+bin_plot3
+
+
+#binned scatterplot for wind speed
+bin_plot4 = huai_data %>%
+  group_by(dist_bin) %>%
+  summarise(dist_huai = mean(dist_huai), wspd = mean(wspd)) %>%
+  ggplot(aes(x = dist_huai, y = wspd)) +
+  geom_point(aes(color = ifelse(dist_huai >= 0, "North", "South")), size = 2, alpha = 1) +
+  scale_color_manual(values = c("North" = "orange", "South" = "blue")) +
+  geom_smooth(data = filter(huai_data, dist_huai <= 0), method = "lm", formula = y ~ poly(x), se = TRUE, color = "black") +
+  geom_smooth(data = filter(huai_data, dist_huai >= 0), method = "lm", formula = y ~ poly(x), se = TRUE, color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "purple") +
+  labs(
+    title = "Wind Speed as a Function of Degree North of the Huai River",
+    color = "",
+    x = "Degrees North of the Huai River",
+    y = "Wind Speed"
+  )
+bin_plot4
+```
+These binned scatterplot organizes data into subsets within a given range of values, and assign value to the bins based on the number of observations that fall within that specific range. 
+
+```{r, echo=FALSE}
+#calculating discontinuity effect
+#calc by hand 
+cutoff_point = 0
+
+regr_hand = rdd_data(y = huai_data$pm10, 
+         x = huai_data$dist_huai, 
+         cutpoint = 0) %>% 
+  rdd_reg_lm(slope = "separate") 
+summary(regr_hand)
+#calc using rdrobust
+# Estimate treatment effect using rdrobust
+rd_result = rdrobust(huai_data$pm10, huai_data$dist_huai, 
+                      c = cutoff_point, 
+                      kernel = "uniform", 
+                      bwselect = "mserd", 
+                      m = 2,
+                      vce = 'hc1')
+
+# Print the treatment effect
+summary(rd_result)
+```
+The result between the rdrobust and the hand regression lies within the coefficient and the standard errors. The hand regression has a smaller estimate and smaller standard errors (32.10, 8.11), where the rdrobust has a larger coefficient and standard errors (48.817, 17.950). Both P-Values indicate statistical significance (being smaller than 0.01).
+
+
+```{r, echo=FALSE}
+#robustness checks
+#Symmetric bandwidth
+rd_symmetric = rdrobust(huai_data$pm10, huai_data$dist_huai,
+                        covs = cbind(huai_data$north_huai * huai_data$dist_huai),
+                        c = cutoff_point, 
+                        kernel = "Uniform", 
+                        m = 2)
+summary(rd_symmetric)
+
+#triangular kernel
+rd_kernel = rdrobust(huai_data$pm10, huai_data$dist_huai,
+                     covs = cbind(huai_data$north_huai * huai_data$dist_huai),
+                     c = cutoff_point,
+                     kernel = "triangular",
+                     bwselect = "mserd", 
+                     m = 2,
+                     h = 30)
+summary(rd_kernel)
+
+# Poly functional form
+rd_poly = rdrobust(huai_data$pm10, huai_data$dist_huai, 
+                     covs = cbind(huai_data$north_huai * huai_data$dist_huai),
+                     c = cutoff_point, 
+                     kernel = "Uniform", 
+                     bwselect = "mserd", 
+                     m = 1,
+                     p = 2,
+                     h = 30)
+summary(rd_poly)
+
+#smallest difference-in-group means estimator
+rd_small = rdrobust(y = huai_data$pm10, x = huai_data$dist_huai, 
+                    covs = cbind(huai_data$north_huai * huai_data$dist_huai),
+                    c = cutoff_point, 
+                    h = 1,
+                    p = 0,
+                    kernel = "Uniform", 
+                    bwselect = "msesum", 
+                    m = 2)
+summary(rd_small)
+
+```
+In the optimal bandwidth approach, we analyze symmetrical bandwidth. Typically a smaller bandwidth provides a more accurate estimate around the threshold, but it may lead to noise in the data, while a larger bandwidth reduces noise but might smooth out the treatment effect. If two different bandwidths are used for these regressions, then regressions will be estimated based on different samples, which will complicate the computation of standard errors for the estimates. 
+
+Typically, the data kernel is rectangular, meaning that all data is weighted the same in the regression. However, in the alternative kernel approach, a triangular kernel weights the data in descending order from the regression discontinuity in an upside-down cone shape. In theory, this will increase accuracy of the estimates due to the heavier weight placed on observations closer to the regression discontinuity, rather than weighting all observations equally. 
+On a personal note, I think this kernel is the most accurate and most statistically valid purely based on the regression discontinuity design.
+
+When comparing functional forms, the standard regression will be linear in parameters. We can alter this and create a quadratic or greater polynomial to better understand the underlying effect of the Huai River policy. In doing this, we estimate a greater discontinuity between North and South, but also larger standard errors, with a larger confidence interval. However, our results still remain statistically significant, implying validity to our regression design, albeit with a larger potential range of values. 
+
+The Smallest-Difference-In-Group-Means Estimator can be chosen by limiting the bandwidth to only one observation from each side of the regression discontinuity. Our P-Values are statistically significant, with a small range confidence interval. Our standard errors are the smallest out of any regression, which can be directly attributed to only 2 values being used by the regression design. 
+
+
+```{r, echo=FALSE}
+#make table with regressions
+#Extract summary information for each RD model
+#Create columns for each test
+col1=c(rd_result$Estimate[1], 
+       rd_result$se[3], 
+       rd_result$ci[3,1], 
+       rd_result$ci[3,2], 
+       rd_result$bws[1], 
+       rd_result$N_h[1])
+col2 = c(rd_symmetric$Estimate[1], 
+        rd_symmetric$se[3], 
+        rd_symmetric$ci[3,1], 
+        rd_symmetric$ci[3,2], 
+        rd_symmetric$bws[1], 
+        rd_symmetric$N_h[1])
+col3 = c(rd_kernel$Estimate[1], 
+        rd_kernel$se[3], 
+        rd_kernel$ci[3,1], 
+        rd_kernel$ci[3,2], 
+        rd_kernel$bws[1], 
+        rd_kernel$N_h[1])
+col4 = c(rd_poly$Estimate[1], 
+        rd_poly$se[3], 
+        rd_poly$ci[3,1], 
+        rd_poly$ci[3,2], 
+        rd_poly$bws[1], 
+        rd_poly$N_h[1])
+col5 = c(rd_small$Estimate[1], 
+       rd_small$se[3], 
+       rd_small$ci[3,1], 
+       rd_small$ci[3,2], 
+       rd_small$bws[1], 
+       rd_small$N_h[1])
+#Bind all columns together to create the table
+result_table <- cbind(
+  col1, col2, col3, col4, col5
+)
+
+# Optionally, you can add column names
+colnames(result_table) <- c(
+  "Regression Discontinuity", "Regression Discontinuity Symmetric", "Regression Discontinuity Kernel", "Regression Discontinuity Linear From", "Regression Discontinuity Small Group Means"
+)
+# Print or view the resulting table
+print(result_table)
+
+```
+This table indicates summary information for each regression.
+
+```{r, echo=FALSE}
+#testing covariate smoothness
+#testing dist_huai and temp
+rd_wind = rdrobust(y = huai_data$temp,
+                   x = huai_data$dist_huai,
+                   c = cutoff_point, 
+                   kernel = "Uniform", 
+                   bwselect = "mserd", 
+                   p = 1)
+
+summary(rd_wind)
+#test dist_huai and precipitation
+rd_prcp = rdrobust(y = huai_data$prcp,
+              x = huai_data$dist_huai,
+              c = cutoff_point,
+              kernel = "Uniform",
+              bwselect = "mserd",
+              p = 1)
+summary(rd_prcp)
+
+#test dist_huai and wind
+rd_wind = rdrobust(y = huai_data$wspd,
+                   x = huai_data$dist_huai,
+                   c = cutoff_point,
+                   kernel = "Uniform",
+                   bwselect = 'mserd',
+                   p = 1)
+summary(rd_wind)
+```
+The covariate smoothness tests indicate no discernable difference North and South of the Huai River. This reinforces our assumptions that "treatment" stems exclusively from the Huai River Policy.
+
+
+``` {r, echo=FALSE}
+#manipulation test
+rdplotdensity(rdd = rddensity(huai_data$dist_huai, c = 0, p = 1),
+              X = huai_data$dist_huai,
+              type = "both")
+
+#large confidence intervals indicate potential noise in the data
+#overlap in confidence intervals express lack of manipulation between North and South observations
+#shows smoothness between groups and minimal concern about manipulation between groups
+```
+
+In the context of this study, manipulation could be a potential concern for those living immediately North and South of the Huai River. Given the similar environments, regional culture, local language, and short distance needed to travel, there is at least a non-zero chance that some form of manipulation may have occurred. Thus, a check for manipulation will be useful to ensure “compliance” in the regression discontinuity.
+
+```{r, include=FALSE}
+#9b placebo tests
+rd_list = list()
+
+j = 1
+
+for (i in-5:5) {
+  out = rdrobust(
+    y = huai_data$pm10,
+    x = huai_data$dist_huai,
+    c = i,
+    kernel = "uniform"
+  )
+  
+  ci_df = data.frame(
+    "dist" = i,
+    "est" = out$Estimate[1],
+    "ci_low" = out$ci[1,1],
+    "ci_high" = out$ci[1,2]
+  )
+  rd_list[[j]] = ci_df
+  
+  j = j + 1
+}
+
+ci_df = bind_rows(rd_list)
+
+plac_plot = ggplot(data = ci_df,
+       aes(x = dist,
+           y = est)) +
+  labs(x = "Estimate", y = "Distance from the Huai River") +
+  geom_point() +
+  geom_errorbar(aes(ymin = ci_low, ymax = ci_high)) +
+  geom_errorbar(aes(ymin = ci_low, ymax = ci_high),
+               color = "blue",  # Set error bar color
+               width = 0.5) + 
+  geom_hline(yintercept = 0)
+  theme_classic()
+```
+
+```{r, echo=FALSE}
+plac_plot
+```
+
+The placebo test helps indicate the results from the Huai River policy are impactful. By comparing other areas north and south of the Huai River, the economists determine that PM10 and Life Expectancies express confidence intervals that include 0, which means the results are not statistically significant. 
+
+The interpretation for the “placebo effect” states that the emphasis of the Huai River comes from the Huai River being used as the line to demarcate the subsidized heating policy. Here we can see that other locations have no impact on our estimates given a change in distance from the Huai River because the confidence intervals include 0, making them statistically irrelevant. 
+
+In essence, if the Huai River policy was moved 1 degree south, we would see the same effect in that location, rather than at the Huai River. 
+
+In the context of Ebenstein et al, the estimate here could specifically be identified as the discontinuity. Additionally, the RDs for this project are all sharp tests of the policy. This is established by 100% “compliance”. For this example, everyone North of the Huai River received and “complied” with the treatment, and everyone South of Huai did not receive treatment and “complied” with the control. Translated, it indicates that all participants' treatment status changes at the cutoff, with 0 observations not “complying” with the assigned outcome. 
+
+The Local Average Treatment Effect estimates the causal effect of the treatment for the subpopulation of compliers, i.e., those who would change their behavior based on the treatment assignment. In turn we can say that the effect of PM10 on health is a local treatment effect based on the nature of compliance. However, we should proceed with caution based on the regression formats being different than the observed regression discontinuity. 
+
+
+
+
+
+
