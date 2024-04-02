@@ -1,5 +1,5 @@
 # Huai_Analysis
-An analysis of the Huai River subsidized heating policy using regression discontinuity design.
+An analysis of the Huai River subsidized heating policy using regression discontinuity design. PDF file has pretty formatting!
 
 This project analyzed the Chinese Huai River subsidized heating policy. In effect, the government provided free coal heating for homes north of the Huai River, and did not provide coal heating for homes south of the Huai River. 
 
